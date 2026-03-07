@@ -185,10 +185,12 @@ class ParticleNetwork {
 // Reveal.js Initialization
 // ============================================
 
+const isMobile = window.innerWidth <= 768;
+
 const deck = Reveal({
-  width: 1920,
-  height: 1080,
-  margin: 0.06,
+  width: isMobile ? 380 : 1920,
+  height: isMobile ? 700 : 1080,
+  margin: isMobile ? 0.04 : 0.06,
   minScale: 0.2,
   maxScale: 2.0,
   hash: true,
@@ -202,6 +204,7 @@ const deck = Reveal({
   controlsTutorial: false,
   progress: false,
   center: true,
+  scrollActivationWidth: 0,
   touch: true,
   keyboard: true,
   overview: true,
