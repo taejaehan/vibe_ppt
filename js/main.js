@@ -24,11 +24,25 @@ class ParticleNetwork {
     this.time = 0;
     this.w = 0;
     this.h = 0;
+    this.mouse = { x: -1000, y: -1000 };
+    this.mouseRadius = 150;
   }
 
   setup() {
     this.resize();
     this.initElements();
+    this.bindMouse();
+  }
+
+  bindMouse() {
+    document.addEventListener('mousemove', (e) => {
+      this.mouse.x = e.clientX;
+      this.mouse.y = e.clientY;
+    });
+    document.addEventListener('mouseleave', () => {
+      this.mouse.x = -1000;
+      this.mouse.y = -1000;
+    });
   }
 
   resize() {
@@ -53,6 +67,7 @@ class ParticleNetwork {
       else if (type < 0.7) shape = 'circle';
       else shape = 'rect';
 
+      const alpha = 0.04 + Math.random() * 0.08;
       this.elements.push({
         x: Math.random() * this.w,
         y: Math.random() * this.h,
@@ -61,7 +76,8 @@ class ParticleNetwork {
         rotSpeed: (Math.random() - 0.5) * 0.003,
         vx: (Math.random() - 0.5) * 0.15,
         vy: -0.1 - Math.random() * 0.15,
-        alpha: 0.04 + Math.random() * 0.08,
+        alpha,
+        _baseAlpha: alpha,
         color,
         shape,
         phase: Math.random() * Math.PI * 2,
@@ -89,10 +105,24 @@ class ParticleNetwork {
   }
 
   update() {
+    const { mouse, mouseRadius } = this;
     for (const el of this.elements) {
       el.x += el.vx + Math.sin(this.time + el.phase) * el.drift * 0.15;
       el.y += el.vy;
       el.rotation += el.rotSpeed;
+
+      // Mouse interaction — gentle repel
+      const dx = el.x - mouse.x;
+      const dy = el.y - mouse.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < mouseRadius && dist > 0) {
+        const force = (1 - dist / mouseRadius) * 1.5;
+        el.x += (dx / dist) * force;
+        el.y += (dy / dist) * force;
+        el.alpha = Math.min(0.18, el.alpha + 0.003);
+      } else if (el.alpha > el._baseAlpha) {
+        el.alpha += (el._baseAlpha - el.alpha) * 0.02;
+      }
 
       if (el.y < -el.size * 2) {
         el.y = this.h + el.size * 2;
@@ -105,8 +135,18 @@ class ParticleNetwork {
 
   draw() {
     if (!this.ctx) return;
-    const { ctx, w, h } = this;
+    const { ctx, w, h, mouse } = this;
     ctx.clearRect(0, 0, w, h);
+
+    // Mouse glow
+    if (mouse.x > 0 && mouse.y > 0) {
+      const grad = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, 180);
+      grad.addColorStop(0, 'rgba(139, 157, 119, 0.06)');
+      grad.addColorStop(0.5, 'rgba(197, 209, 184, 0.03)');
+      grad.addColorStop(1, 'rgba(197, 209, 184, 0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(mouse.x - 180, mouse.y - 180, 360, 360);
+    }
 
     for (const el of this.elements) {
       ctx.save();
@@ -170,20 +210,27 @@ const deck = Reveal({
 });
 
 deck.initialize().then(() => {
-  // Setup particle backgrounds
-  const titleCanvas = document.getElementById('title-particles');
-  const endingCanvas = document.getElementById('ending-particles');
+  // Setup global particle canvas
+  const globalCanvas = document.getElementById('title-particles');
+  const globalWrap = document.getElementById('global-canvas-wrap');
+  const particleNet = globalCanvas ? new ParticleNetwork(globalCanvas) : null;
 
-  const titleNet = titleCanvas ? new ParticleNetwork(titleCanvas) : null;
-  const endingNet = endingCanvas ? new ParticleNetwork(endingCanvas) : null;
-
-  if (titleNet) {
-    titleNet.setup();
-    titleNet.start();
+  if (particleNet) {
+    particleNet.setup();
   }
 
-  if (endingNet) {
-    endingNet.setup();
+  function showParticles() {
+    if (!particleNet) return;
+    globalWrap.classList.add('visible');
+    particleNet.resize();
+    particleNet.initElements();
+    particleNet.start();
+  }
+
+  function hideParticles() {
+    if (!particleNet) return;
+    globalWrap.classList.remove('visible');
+    particleNet.stop();
   }
 
   // iframe lazy loading
@@ -335,27 +382,21 @@ deck.initialize().then(() => {
   animateSeqElements(deck.getCurrentSlide());
   loadIframes(deck.getCurrentSlide());
 
+  // Show particles on title/ending slide at init
+  const lastSlideIndex = document.querySelectorAll('.reveal .slides > section').length - 1;
+  if (initIdx.h === 0 || initIdx.h === lastSlideIndex) {
+    showParticles();
+  }
+
   // Manage particle animations, iframes, seq animations, pagination
   deck.on('slidechanged', (event) => {
     console.log('slidechanged — h:', event.indexh, 'v:', event.indexv, 'subCounts[h]:', subCounts[event.indexh]);
-    // Title slide (index 0, 0)
-    if (event.indexh === 0 && event.indexv === 0) {
-      titleNet?.start();
-    } else {
-      titleNet?.stop();
-    }
 
-    // Ending slide
-    if (endingNet) {
-      const slides = document.querySelectorAll('.reveal .slides > section');
-      const lastIndex = slides.length - 1;
-      if (event.indexh === lastIndex) {
-        endingNet.resize();
-        endingNet.initElements();
-        endingNet.start();
-      } else {
-        endingNet.stop();
-      }
+    // Show particles on title (0) and ending (last) slides
+    if (event.indexh === 0 || event.indexh === lastSlideIndex) {
+      showParticles();
+    } else {
+      hideParticles();
     }
 
     // Lazy load iframes on current slide
@@ -375,13 +416,9 @@ deck.initialize().then(() => {
 
   // Handle resize
   window.addEventListener('resize', () => {
-    if (titleNet) {
-      titleNet.resize();
-      titleNet.initElements();
-    }
-    if (endingNet) {
-      endingNet.resize();
-      endingNet.initElements();
+    if (particleNet) {
+      particleNet.resize();
+      particleNet.initElements();
     }
   });
 });

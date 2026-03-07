@@ -156,16 +156,21 @@
   text-transform: uppercase;
 }
 
-/* Title particle canvas */
-.title-canvas-wrap {
-  position: absolute;
+/* Global particle canvas */
+#global-canvas-wrap {
+  position: fixed;
   inset: 0;
-  z-index: 0;
+  z-index: 1;
   pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+#global-canvas-wrap.visible {
   opacity: 1;
 }
 
-.title-canvas-wrap canvas {
+#global-canvas-wrap canvas {
   display: block;
   width: 100%;
   height: 100%;
@@ -174,7 +179,7 @@
 .title-slide .slide-content-inner,
 .ending-slide .slide-content-inner {
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 
 .glow-text {
