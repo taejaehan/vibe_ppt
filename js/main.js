@@ -1,5 +1,5 @@
-import Reveal from '/node_modules/reveal.js/dist/reveal.esm.js';
-import RevealNotes from '/node_modules/reveal.js/plugin/notes/notes.esm.js';
+import Reveal from 'https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.esm.js';
+import RevealNotes from 'https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.esm.js';
 
 // ============================================
 // Botanical Floating Elements
