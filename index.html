@@ -479,6 +479,21 @@
           </aside>
         </section>
 
+        <!-- 9-1. 시스템 구성도 다이어그램 -->
+        <section>
+          <h2>Mugic - 시스템 전체 구성도</h2>
+          <div style="text-align:center; padding:0.3em 0;">
+            <img src="assets/images/diagrams/system-overview.png" alt="System Overview Diagram"
+                 style="max-width:95%; max-height:70vh; border-radius:12px; box-shadow:0 4px 24px rgba(0,0,0,0.12);">
+          </div>
+          <p style="font-size:0.6em; color:var(--color-text-dim); text-align:center; margin-top:0.4em;">
+            Frontend &rarr; Backend &rarr; Queue Workers &rarr; External APIs (Suno, GPT-4, YouTube, Toss)
+          </p>
+          <aside class="notes">
+            실제 설계 다이어그램. AWS EC2 위에 Express 백엔드, BullMQ 큐 워커, 6개 외부 API 연동.
+          </aside>
+        </section>
+
         <!-- 10. AI & 크레딧 시스템 -->
         <section>
           <h2>Mugic - AI &amp; 비즈니스</h2>
@@ -529,6 +544,54 @@
             AI + 크레딧 시스템 1분 30초.
             GPT-4 Function Calling으로 자연어 대화에서 음악 생성.
             크레딧 4가지 타입 - SaaS 비즈니스 모델.
+          </aside>
+        </section>
+
+        <!-- 10-1. AI 채팅 음악 생성 시퀀스 다이어그램 -->
+        <section>
+          <h2>Mugic - AI 채팅 생성 프로세스</h2>
+          <div class="two-col" style="align-items:flex-start;">
+            <div style="flex:1.2;">
+              <img src="assets/images/diagrams/ai-chat-generation.png" alt="AI Chat Generation Sequence"
+                   style="max-width:100%; max-height:65vh; border-radius:12px; box-shadow:0 4px 24px rgba(0,0,0,0.12);">
+            </div>
+            <div style="flex:0.8;">
+              <div class="glass-card accent-top">
+                <h3 style="font-size:0.85em;">자연어 &rarr; 음악 생성</h3>
+                <ol style="font-size:0.7em; padding-left:1.2em; margin:0.4em 0 0;">
+                  <li>"신나는 팝송 3곡 만들어줘"</li>
+                  <li>GPT-4o가 파라미터 추출</li>
+                  <li>Function Call로 생성 트리거</li>
+                  <li>배치 서비스에서 Suno API 호출</li>
+                  <li>실시간 진행 표시</li>
+                </ol>
+              </div>
+              <div class="glass-card seq" style="margin-top:12px;">
+                <p style="font-size:0.7em; margin:0;">
+                  <strong>~1,000줄</strong> 시스템 프롬프트<br>
+                  음악 전문가 역할 + BPM 레퍼런스<br>
+                  보컬/악기 감지 + 보안 규칙
+                </p>
+              </div>
+            </div>
+          </div>
+          <aside class="notes">
+            AI 채팅 시퀀스 다이어그램. 사용자가 자연어로 요청하면 GPT-4o가 Function Calling으로 파라미터를 추출하고 음악 생성을 트리거합니다.
+          </aside>
+        </section>
+
+        <!-- 10-2. 음악 생성 프로세스 다이어그램 -->
+        <section>
+          <h2>Mugic - 음악 생성 프로세스</h2>
+          <div style="text-align:center; padding:0.3em 0;">
+            <img src="assets/images/diagrams/music-generation.png" alt="Music Generation Process"
+                 style="max-width:95%; max-height:70vh; border-radius:12px; box-shadow:0 4px 24px rgba(0,0,0,0.12);">
+          </div>
+          <p style="font-size:0.6em; color:var(--color-text-dim); text-align:center; margin-top:0.4em;">
+            크레딧 확인 &rarr; BullMQ 큐 등록 &rarr; Suno API 호출 &rarr; 웹훅 콜백 &rarr; S3 업로드 &rarr; 결과 제공
+          </p>
+          <aside class="notes">
+            음악 생성 전체 프로세스. 심플/커스텀 모드 모두 동일한 파이프라인. 크레딧 차감, 큐 우선순위(PREMIUM > FREE), 웹훅 콜백으로 비동기 처리.
           </aside>
         </section>
 
@@ -689,6 +752,36 @@
           <aside class="notes">
             멀티엔진 1분. 4개 엔진을 용도별로 사용.
             Factory 패턴으로 LLM 런타임 전환 - 비용과 품질 사이 최적화.
+          </aside>
+        </section>
+
+        <!-- 14-1. 시스템 아키텍처 다이어그램 -->
+        <section>
+          <h2>Video Generator - 전체 구성도</h2>
+          <div style="text-align:center; padding:0.3em 0;">
+            <img src="assets/images/diagrams/architecture.png" alt="Video Generator Architecture"
+                 style="max-width:95%; max-height:70vh; border-radius:12px; box-shadow:0 4px 24px rgba(0,0,0,0.12);">
+          </div>
+          <p style="font-size:0.6em; color:var(--color-text-dim); text-align:center; margin-top:0.4em;">
+            React &rarr; Express &rarr; LLM(Claude/OpenAI) + Vidu/Veo/Imagen + Supertone TTS &rarr; FFmpeg Export
+          </p>
+          <aside class="notes">
+            전체 시스템 아키텍처 다이어그램. 프론트엔드 4단계 워크플로우와 백엔드 컨트롤러, 외부 AI 서비스 연동 구조.
+          </aside>
+        </section>
+
+        <!-- 14-2. 엔진별 비교 다이어그램 -->
+        <section>
+          <h2>Video Generator - 엔진별 처리 흐름</h2>
+          <div style="text-align:center; padding:0.3em 0;">
+            <img src="assets/images/diagrams/engine-comparison.png" alt="Engine Comparison"
+                 style="max-width:90%; max-height:68vh; border-radius:12px; box-shadow:0 4px 24px rgba(0,0,0,0.12);">
+          </div>
+          <p style="font-size:0.6em; color:var(--color-text-dim); text-align:center; margin-top:0.4em;">
+            Google Veo (백엔드 폴링) vs Vidu (프론트 폴링) vs Imagen (동기 즉시 반환) &mdash; 엔진마다 다른 요청/응답 패턴
+          </p>
+          <aside class="notes">
+            엔진별 요청/응답 패턴 비교. Veo는 백엔드 폴링, Vidu는 프론트 폴링, Imagen은 동기 즉시 반환. 각각 다른 패턴을 통합 인터페이스로 처리.
           </aside>
         </section>
 
